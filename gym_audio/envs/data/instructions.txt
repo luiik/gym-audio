@@ -1,0 +1,3 @@
+When you hear “wait” a car is ahead of you.
+When a car is approaching from the right you will hear “car to right”, move up or down to avoid the car. 
+When hit by a car you will hear 

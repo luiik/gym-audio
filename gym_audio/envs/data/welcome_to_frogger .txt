@@ -1,0 +1,2 @@
+Hello there, Welcome to Frogger.
+The goal of this game is to make it across the road and river to a safe place.

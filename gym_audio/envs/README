@@ -1,0 +1,12 @@
+The aim of frogger is to gain points by getting frogs safely across a busy road and a treacherous river to their homes.
+
+Use the arrow keys to move and avoid being squashed by the vehicles, drowning in the river and being eaten by the crocodile.  Collect flies for bonus points and get a time bonus by getting frogs home quickly.
+Only a single frog can live in each home and frogs cannot live in a home containing the remains of a frog eaten by a crocodile.  If you get any frogs home you can continue on to the next level(s), which are faster and for which the available time is decreased.
+
+Points:
+Goal	10 points
+Death  -10 points
+
+
+
+
