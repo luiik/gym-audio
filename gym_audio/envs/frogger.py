@@ -79,7 +79,7 @@ class Frogger(audio_game.AudioGame):
         super(Frogger, self).__init__(width, height, render)
 
     def _render(self, mode='human', close=False):
-        pass
+        self.screen.blit(self.background, (0, 0))
 
     def moveObjects(self):
         # Move all objects
@@ -102,7 +102,7 @@ class Frogger(audio_game.AudioGame):
 
     def _step(self, action):
         # Begin main game loop
-        self.screen.blit(self.background, (0, 0))
+       
 
         if action == 0 and self.frog:
             self.score += 1
@@ -300,9 +300,6 @@ class Frogger(audio_game.AudioGame):
         def __init__(self, x_pos,  y_pos):
             self.x,  self.y = x_pos, y_pos
             self.width,  self.height = 60,  60
-
-
-
 
 def main():
     import pygame, sys
