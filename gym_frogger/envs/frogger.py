@@ -13,20 +13,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import platform
-
-from gym import spaces
-
-import audio_game
+from pygame import *
 from frogger_sprites import *
+import random
+import os
+import platform
+import cPickle
+import operator
+import audio_game
+import gym
+from gym import error, spaces, utils
+from gym.utils import seeding
+import pygame
+pygame.init()
 
-init()
 class Frogger(audio_game.AudioGame):
     metadata = {'render.modes': ['human']}
     croc_locations = ((50, 0), (200, 0), (350, 0), (500, 0))
     home_points = 100
     # Set up pygame window.
-    def __init__(self,no_of_lives=5,width=500, height=500, render=True):
+    def __init__(self,no_of_lives=1,width=500, height=500, render=True,visual=True):
         if platform.system() == "Windows":
             os.environ['SDL_VIDEODRIVER'] = 'windib'
         mixer.pre_init(44100, -16, 2, 1024)
@@ -74,35 +80,24 @@ class Frogger(audio_game.AudioGame):
         self.name = "_"
         self.quit = 0
         self.game_data = self.load_sprites()
-    #     RL VARIABLES
+        #     RL VARIABLES
         self.action_space = spaces.Discrete(4)
         super(Frogger, self).__init__(width, height, render)
 
+
     def _render(self, mode='human', close=False):
-        pass
+        self.screen.blit(self.background, (0, 0))
+        # Draw score to screen
 
-    def moveObjects(self):
-        # Move all objects
-        to_move = ['vehicles', 'river_objects', 'crocs', 'frogs']
+        display.flip()
 
-        for li in to_move:
-            for obj in self.game_data[li]:
-                obj.move(self.level_counter)
-                if li == 'vehicles' and self.frog:
-                    self.frog.vehicleDetected(obj)
-
-    def drawObjects(self):
-        # Draw all objects.  The order is important. frogs need to be on top of all but vehicles
-        to_draw = ['river_objects', 'crocs', 'frogs', 'vehicles']
-        for li in to_draw:
-            [obj.render() for obj in self.game_data[li]]
-        scoretext = self.scorefont.render("Score: " + str(self.score), True, (220, 0, 0))
-        self.screen.blit(scoretext, (5, 400))
-        display.update()
 
     def _step(self, action):
         # Begin main game loop
-        self.screen.blit(self.background, (0, 0))
+        # if self.render:
+        #     self._render()
+
+
 
         if action == 0 and self.frog:
             self.score += 1
@@ -114,20 +109,35 @@ class Frogger(audio_game.AudioGame):
         elif action == 3 and self.frog:
             self.frog.step(action)
 
-        # Move objects
-        self.moveObjects()
+        # Move all objects
+        to_move = ['vehicles', 'river_objects', 'crocs', 'frogs']
+
+        for li in to_move:
+            for obj in self.game_data[li]:
+                obj.move(self.level_counter)
+                if li == 'vehicles' and self.frog:
+                    self.frog.vehicleDetected(obj)
+
         # Collision detection
         self.riverCollisions()
         self.vehicleCollision()
         self.crocCollision()
         self.madeItToGoal()
 
-        # draw objects
-        self.drawObjects()
+        # Draw all objects.  The order is important. frogs need to be on top of all but vehicles
+        to_draw = ['river_objects', 'crocs', 'frogs', 'vehicles']
+        for li in to_draw:
+            [obj.render() for obj in self.game_data[li]]
+
+        scoretext = self.scorefont.render("Score: " + str(self.score), True, (220, 0, 0))
+        self.screen.blit(scoretext, (5, 400))
+
+        display.update()
 
         reward = self.score
 
         done = False if self.frog else True
+
 
         obs = self.game_data
 
@@ -210,7 +220,7 @@ class Frogger(audio_game.AudioGame):
 
     def generateFrogs(self,no_of_lives):
             frog_x_positions = [x * 50 for x in range(no_of_lives)]
-            frogs = [Frog(x, 430, path.join(path.dirname(__file__), "data/frog.png"), path.join(path.dirname(__file__), "data/splat.png"), 0) for x in frog_x_positions]
+            frogs = [Frog(x, 430, 'data/frog.png', 'data/splat.png', 0) for x in frog_x_positions]
             return frogs
 
     def generateVehicles(self):
@@ -219,18 +229,17 @@ class Frogger(audio_game.AudioGame):
         bikes = [Bike(x, 250) for x in [300, 620]]
 
         vehicles = []
-        vehicles.extend(cars)
-        vehicles.extend(lorries)
-        vehicles.extend(bikes)
+        # vehicles.extend(cars)
+        # vehicles.extend(lorries)
+        # vehicles.extend(bikes)
 
         return vehicles
 
     def generateRiverObjects(self):
-
-        logs1 = [Log(x, 50, path.join(path.dirname(__file__), "data/log.png"), None, -4) for x in [0, 128, 256, 384, 512]]
-        turtles = [Turtle(x, 100, path.join(path.dirname(__file__), "data/turtle.png"), path.join(path.dirname(__file__), "data/sink_turtle.png"), 2, 0.75) \
+        logs1 = [Log(x, 50, 'data/log.png', None, -4) for x in [0, 128, 256, 384, 512]]
+        turtles = [Turtle(x, 100, 'data/turtle.png', 'data/sink_turtle.png', 2, 0.75) \
                    for x in [50, 178, 306, 434, 562]]
-        logs2 = [Log(x, 150, path.join(path.dirname(__file__), "data/log.png"), None, -4) for x in [0, 128, 256, 384, 512]]
+        logs2 = [Log(x, 150, 'data/log.png', None, -4) for x in [0, 128, 256, 384, 512]]
 
         river_objects = []
         river_objects.extend(logs1)
@@ -252,8 +261,7 @@ class Frogger(audio_game.AudioGame):
 
         homes = [Frogger.Home(x, 0) for x in [50, 200, 350, 500]]
 
-
-        crocs = [TimedMoveable(50, 0, path.join(path.dirname(__file__), "data/croc.png"), None, None, 3, Frogger.croc_locations)]
+        crocs = [TimedMoveable(50, 0, 'data/croc.png', None, None, 3, Frogger.croc_locations)]
 
         self.game_data = {'frog': self.frog, 'frogs': self.frogs,
                           'vehicles': self.vehicles,'river_objects': self.river_objects, \
@@ -270,6 +278,8 @@ class Frogger(audio_game.AudioGame):
         self.highscores = None
         self.new_highscore = False
         self.game_over = False
+
+    #Global Function definitions are defined here.
 
     def intersect(self,frogger, mover):
         if ((frogger.x + frogger.width - 5) > mover.x - 15) and (frogger.x + 5 < mover.x + mover.width -15 ) \
@@ -301,19 +311,23 @@ class Frogger(audio_game.AudioGame):
             self.x,  self.y = x_pos, y_pos
             self.width,  self.height = 60,  60
 
-
-
-
 def main():
-    import pygame, sys
+    game = Frogger(visual=False)
 
-    running = True
-    while running:
+    while True:
+
+        # self.game_data = game.load_sprites()
+
+        action = game.action_space.sample()
+        _, _, terminal, _ = game.step(action)
+
+        if terminal:
+            game.reset()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()  # quit the screen
-                running = False
                 sys.exit()
+
 
 if __name__ == '__main__':
     main()
